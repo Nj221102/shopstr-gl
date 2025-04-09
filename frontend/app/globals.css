@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    background: #181818; /* Darker background */
+    color: #ffffff; /* White text */
+}
+
+.container {
+    max-width: 500px; /* Limit width for readability */
+    margin: auto; /* Center container */
+    padding: 20px; /* Padding for the container */
+    background: #202020; /* Darker container background */
+    border-radius: 12px; /* Rounded corners */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Subtle shadow */
+}
+
+h1 {
+    font-size: 2.5rem; /* Larger title */
+    text-align: center; /* Center heading */
+    margin-bottom: 10px; /* Space beneath */
+}
+
+.description {
+    font-size: 1rem; /* Description font size */
+    text-align: center; /* Center align */
+    margin-bottom: 20px; /* Space below the description */
+}
+
+label {
+    display: block; /* Block label */
+    margin-bottom: 5px; /* Margin below the label */
+}
+
+input,
+select {
+    background: #2a2a2a; /* Dark input background */
+    color: #ffffff; /* White input text */
+    border: 1px solid #5a5a5a; /* Light border */
+    border-radius: 8px; /* Rounded corners */
+    padding: 10px; /* Padding for inputs */
+    width: 100%; /* Full width */
+    box-sizing: border-box; /* Include padding in width */
+    margin-bottom: 15px; /* Space below inputs */
+    transition: border 0.3s; /* Smooth border on focus */
+}
+
+input::placeholder {
+    color: #888; /* Placeholder color */
+}
+
+input:focus,
+select:focus {
+    border-color: #4a90e2; /* Change border color on focus */
+    outline: none; /* Remove outline */
+}
+
+button {
+    background: #4CAF50; /* Green button */
+    color: white; /* White text */
+    border: none; /* No border */
+    border-radius: 8px; /* Rounded button */
+    padding: 10px 15px; /* Padding for button */
+    cursor: pointer; /* Pointer cursor on hover */
+    font-weight: bold; /* Bold text */
+    text-align: center; /* Center text */
+    width: 100%; /* Full width */
+    transition: background 0.3s; /* Smooth transition */
+}
+
+button:hover {
+    background: #45a049; /* Darker green on hover */
+}
