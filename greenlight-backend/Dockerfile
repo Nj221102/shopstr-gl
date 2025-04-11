@@ -1,4 +1,4 @@
-FROM rust:1.75 as builder
+FROM rust:latest as builder
 
 # Install protobuf compiler
 RUN apt-get update && apt-get install -y protobuf-compiler
@@ -10,10 +10,10 @@ COPY . .
 # Build the application
 RUN cargo build --release
 
-# Runtime image
-FROM debian:bullseye-slim
+# Runtime image - using the same base image as the builder to ensure compatibility
+FROM debian:bookworm-slim
 
-# Install SSL certificates
+# Install SSL certificates and other runtime dependencies
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Copy the binary from the builder stage
