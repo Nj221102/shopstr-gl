@@ -181,6 +181,20 @@ async fn create_offer(query: web::Query<CreateOfferRequest>) -> impl Responder {
     }
 }
 
+async fn health_check() -> impl Responder {
+    HttpResponse::Ok().json(ApiResponse {
+        success: true,
+        message: "Greenlight backend API is healthy".to_string(),
+        data: Some(serde_json::json!({
+            "status": "ok",
+            "timestamp": SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+        })),
+    })
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("🚀 Greenlight backend starting on 0.0.0.0:8081");
@@ -194,6 +208,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(cors)
             .route("/api/create-offer", web::get().to(create_offer))
+            .route("/health", web::get().to(health_check))
     })
     .bind("0.0.0.0:8081")?
     .run()
