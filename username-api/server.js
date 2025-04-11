@@ -48,10 +48,29 @@ app.get('/health', (req, res) => {
 import('./dist/index.js')
   .then(module => {
     console.log('API module loaded successfully');
+    
+    // Import the routes from the username module
+    import('./dist/routes/username.js')
+      .then(usernameModule => {
+        // Mount the username routes
+        app.use('/', usernameModule.default);
+        console.log('Username routes mounted successfully');
+      })
+      .catch(err => {
+        console.error('Failed to load username routes:', err);
+      });
   })
   .catch(err => {
     console.error('Failed to load API module:', err);
   });
 
+// Start the server if not being imported by Vercel
+const PORT = process.env.PORT || 3000;
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
 // Export for Vercel
-export default app; 
+export default app;
