@@ -6,8 +6,16 @@ import usernameRoutes from './routes/username.js';
 // Create Express app
 const app = express();
 
+// CORS configuration
+const corsOptions = {
+  origin: ['http://localhost:3000', 'https://shopstr-gl.vercel.app', 'https://nitishjha.space'],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Welcome route
