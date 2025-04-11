@@ -15,6 +15,7 @@ use dotenv::dotenv;
 use rand::rng;
 use rand::RngCore;
 use std::time::{SystemTime, UNIX_EPOCH};
+use base64::{Engine as _, engine::general_purpose};
 
 #[derive(Deserialize)]
 struct CreateOfferRequest {
@@ -28,6 +29,88 @@ struct ApiResponse {
     data: Option<serde_json::Value>,
 }
 
+// Function to load either environment variables or certificate files
+fn load_certificates() -> Result<(Vec<u8>, Vec<u8>), String> {
+    // Try to load from .env file first
+    if let Ok(_) = dotenv() {
+        println!("Loaded .env file");
+    } else {
+        // If that fails, try .env.base64
+        match dotenv::from_filename(".env.base64") {
+            Ok(_) => println!("Loaded .env.base64 file"),
+            Err(e) => println!("Note: No env file loaded: {}", e),
+        }
+    }
+    
+    // Try to get cert content from environment variable
+    let cert_content = match env::var("GL_CERT_CONTENT") {
+        Ok(content) => {
+            println!("Using certificate from GL_CERT_CONTENT environment variable");
+            // Check if content is Base64 encoded
+            match general_purpose::STANDARD.decode(&content) {
+                Ok(decoded) => {
+                    println!("Decoded Base64 certificate content");
+                    decoded
+                },
+                Err(_) => {
+                    // Not Base64, use as-is
+                    println!("Using raw certificate content");
+                    content.into_bytes()
+                }
+            }
+        },
+        Err(_) => {
+            // Fallback to file
+            let cert_path = env::var("GL_CERT_PATH").unwrap_or_else(|_| "client.crt".to_string());
+            println!("GL_CERT_CONTENT not found, trying to read from file: {}", cert_path);
+            match fs::read(&cert_path) {
+                Ok(content) => {
+                    println!("Loaded certificate from file: {}", cert_path);
+                    content
+                },
+                Err(e) => return Err(format!("Failed to read certificate from {}: {}", cert_path, e)),
+            }
+        }
+    };
+    
+    // Try to get key content from environment variable
+    let key_content = match env::var("GL_KEY_CONTENT") {
+        Ok(content) => {
+            println!("Using key from GL_KEY_CONTENT environment variable");
+            // Check if content is Base64 encoded
+            match general_purpose::STANDARD.decode(&content) {
+                Ok(decoded) => {
+                    println!("Decoded Base64 key content");
+                    decoded
+                },
+                Err(_) => {
+                    // Not Base64, use as-is
+                    println!("Using raw key content");
+                    content.into_bytes()
+                }
+            }
+        },
+        Err(_) => {
+            // Fallback to file
+            let key_path = env::var("GL_KEY_PATH").unwrap_or_else(|_| "client-key.pem".to_string());
+            println!("GL_KEY_CONTENT not found, trying to read from file: {}", key_path);
+            match fs::read(&key_path) {
+                Ok(content) => {
+                    println!("Loaded key from file: {}", key_path);
+                    content
+                },
+                Err(e) => return Err(format!("Failed to read key from {}: {}", key_path, e)),
+            }
+        }
+    };
+    
+    // Debug log the lengths to avoid printing sensitive data
+    println!("Certificate loaded: {} bytes", cert_content.len());
+    println!("Key loaded: {} bytes", key_content.len());
+    
+    Ok((cert_content, key_content))
+}
+
 async fn create_offer(query: web::Query<CreateOfferRequest>) -> impl Responder {
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -36,30 +119,14 @@ async fn create_offer(query: web::Query<CreateOfferRequest>) -> impl Responder {
     println!("[{}] /api/create-offer called", timestamp);
     println!("[{}] Received expiry: {:?}", timestamp, query.expiry);
     
-    dotenv().ok();
-    
-    let cert_path = env::var("GL_CERT_PATH").unwrap_or_else(|_| "client.crt".to_string());
-    let key_path = env::var("GL_KEY_PATH").unwrap_or_else(|_| "client-key.pem".to_string());
-    
-    let developer_cert = match fs::read(&cert_path) {
-        Ok(cert) => cert,
-        Err(_) => {
-            println!("[{}] ❌ Failed: Developer certificate not found", timestamp);
+    // Load certificates
+    let (developer_cert, developer_key) = match load_certificates() {
+        Ok((cert, key)) => (cert, key),
+        Err(e) => {
+            println!("[{}] ❌ Failed: {}", timestamp, e);
             return HttpResponse::InternalServerError().json(ApiResponse {
                 success: false,
-                message: format!("Developer certificate not found at {}", cert_path),
-                data: None,
-            });
-        }
-    };
-    
-    let developer_key = match fs::read(&key_path) {
-        Ok(key) => key,
-        Err(_) => {
-            println!("[{}] ❌ Failed: Developer key not found", timestamp);
-            return HttpResponse::InternalServerError().json(ApiResponse {
-                success: false,
-                message: format!("Developer key not found at {}", key_path),
+                message: e,
                 data: None,
             });
         }
@@ -138,7 +205,7 @@ async fn create_offer(query: web::Query<CreateOfferRequest>) -> impl Responder {
 
     let offer_request = OfferRequest {
         amount: "any".to_string(),
-        description: "Shopstr username registration".to_string(),
+        description: Some("Shopstr username registration".to_string()),
         issuer: Some("".to_string()),
         label: Some("".to_string()),
         absolute_expiry: query.expiry.map(|e| {
@@ -156,6 +223,7 @@ async fn create_offer(query: web::Query<CreateOfferRequest>) -> impl Responder {
         single_use: None,
         quantity_max: Some(0),
         recurrence: None,
+        recurrence_start_any_period: None, // Added required field
     };
 
     match node.offer(offer_request).await {
@@ -182,6 +250,12 @@ async fn create_offer(query: web::Query<CreateOfferRequest>) -> impl Responder {
 }
 
 async fn health_check() -> impl Responder {
+    // Try to load certificates to check if they're available
+    let certs_loaded = match load_certificates() {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+    
     HttpResponse::Ok().json(ApiResponse {
         success: true,
         message: "Greenlight backend API is healthy".to_string(),
@@ -191,6 +265,9 @@ async fn health_check() -> impl Responder {
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_secs(),
+            "config": {
+                "certificates_loaded": certs_loaded
+            }
         })),
     })
 }
@@ -198,6 +275,13 @@ async fn health_check() -> impl Responder {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("🚀 Greenlight backend starting on 0.0.0.0:8081");
+    
+    // Check if certificates can be loaded
+    match load_certificates() {
+        Ok(_) => println!("✅ Certificates loaded successfully"),
+        Err(e) => println!("⚠️ Warning: {}", e),
+    }
+    
     HttpServer::new(|| {
         let cors = Cors::default()
             .allow_any_origin()

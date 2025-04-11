@@ -4,8 +4,7 @@
 Cargo.lock
 
 # Environment files
-.env
-.env.local
+.env.base64
 
 # Certificate files
 *.crt

@@ -1,0 +1,12 @@
+# Exclude target directory and Git files
+target/
+.git/
+.gitignore
+
+# Don't exclude the certificates since we need them for the application
+client.crt
+client-key.pem
+
+# Exclude any other unnecessary files
+*.md
+.env.base64
