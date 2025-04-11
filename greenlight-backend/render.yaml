@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: greenlight-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    healthCheckTimeout: 5s
+    envVars:
+      - key: GL_CERT_CONTENT
+        sync: false
+      - key: GL_KEY_CONTENT
+        sync: false
+    autoDeploy: true
