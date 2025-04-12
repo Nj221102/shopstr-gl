@@ -1,113 +1,93 @@
-# Shopstr Username Registration
+# Shopstr Bitcoin Username Registration
 
-A web application that allows users to register Bitcoin usernames using BOLT12 offers. The application consists of a Next.js frontend and a Rust backend using Greenlight.
+A platform for registering Bitcoin usernames using BOLT12 offers with BIP-353 compliant DNS records. The project consists of a TypeScript-based REST API and a Rust backend using Greenlight.
 
-## Features
+## Components
 
-- Register Bitcoin usernames with BOLT12 offers
-- Configurable offer expiry times (1 minute, 1 hour, 12 hours, 1 day, 1 month, 1 year)
-- Automatic DNS record creation using Cloudflare
-- Modern, responsive UI with dark theme
-
-## Prerequisites
-
-- Node.js (v18 or later)
-- Rust (latest stable)
-- Cloudflare account with API access
-- Greenlight developer certificate and key
+- **Username API**: TypeScript REST API for registering Bitcoin usernames with BOLT12 offers
+- **Greenlight Backend**: Rust-based service for Greenlight integration
 
 ## Project Structure
 
 ```
 .
-├── frontend/              # Next.js frontend application
-│   ├── app/              # Next.js app directory
-│   ├── public/           # Static files
-│   └── .env.example      # Frontend environment variables
+├── .github/              # GitHub Actions workflow configurations
+│   └── workflows/        # GitHub Actions workflow files
+├── username-api/         # TypeScript REST API for username registration
+│   ├── src/              # Source code
+│   │   ├── routes/       # API route definitions
+│   │   └── services/     # Business logic and external services
+│   └── README.md         # API-specific documentation
 ├── greenlight-backend/   # Rust backend using Greenlight
 │   ├── src/              # Source code
-│   └── .env.example      # Backend environment variables
+│   └── Dockerfile        # Container configuration
 └── README.md             # This file
 ```
+
+## Features
+
+- Register Bitcoin usernames with BOLT12 offers
+- Automatic DNS record creation using Cloudflare
+- Health monitoring via GitHub Actions
+- BIP-353 compliant DNS record generation
+- Production deployment on Vercel
 
 ## Setup Instructions
 
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/shopstr-gl.git
 cd shopstr-gl
 ```
 
-### 2. Frontend Setup
+### 2. Username API Setup
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
+See the [Username API README](./username-api/README.md) for detailed setup instructions.
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Copy the environment file:
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Update the `.env` file with your Cloudflare credentials and domain.
-
-### 3. Backend Setup
+### 3. Greenlight Backend Setup
 
 1. Navigate to the backend directory:
    ```bash
    cd greenlight-backend
    ```
 
-2. Copy the environment file:
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Place your Greenlight certificate and key files in the backend directory:
+2. Place your Greenlight certificate and key files in the backend directory:
    - `client.crt`
    - `client-key.pem`
 
-### 4. Running the Application
-
-1. Start the backend server:
+3. Build and run the backend:
    ```bash
-   cd greenlight-backend
    cargo run
    ```
 
-2. In a new terminal, start the frontend development server:
-   ```bash
-   cd frontend
-   npm run dev
-   ```
+## Health Monitoring
 
-3. Open your browser and navigate to `http://localhost:3000`
+The repository includes an automated GitHub Actions workflow that checks the health of the API endpoint every 5 minutes. 
 
-## Environment Variables
+### Features of the health check:
+- Scheduled monitoring every 5 minutes
+- Automatic retry for transient failures
+- Slack notifications for persistent issues
+- Detailed logs in GitHub Actions
 
-### Frontend (.env)
-- `NEXT_PUBLIC_GREENLIGHT_API_URL`: URL of the Greenlight backend (default: http://localhost:8081)
-- `CLOUDFLARE_API_KEY`: Your Cloudflare API key
-- `CLOUDFLARE_ZONE_ID`: Your Cloudflare zone ID
-- `DOMAIN`: Your domain name (e.g., example.com)
+### Configuration
 
-### Backend (.env)
-- `GL_CERT_PATH`: Path to your Greenlight certificate (default: client.crt)
-- `GL_KEY_PATH`: Path to your Greenlight key (default: client-key.pem)
+To configure the health check, update the following GitHub repository secrets:
+- `API_HEALTH_URL`: The URL of your health endpoint
+- `SLACK_WEBHOOK`: (Optional) Webhook URL for Slack notifications
 
 ## Development
 
-- Frontend runs on port 3000
-- Backend runs on port 8081
-- The application uses CORS to allow communication between frontend and backend
+- Username API runs on port 8080 by default
+- Greenlight backend runs on port 8081 by default
+- Both services have CORS enabled for cross-origin requests
+
+## Deployment
+
+- Username API is deployed on Vercel at https://shopstr-gl.vercel.app
+- Greenlight backend can be deployed using the provided Dockerfile
 
 ## License
 
-[Add your license information here] 
+MIT
