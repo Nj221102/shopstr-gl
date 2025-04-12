@@ -6,11 +6,24 @@ on:
     - cron: '*/5 * * * *'
   # Also allow manual triggering
   workflow_dispatch:
+  # Run on push to the repository
+  push:
+    branches:
+      - main
+      - master
+  # Run on pull requests
+  pull_request:
+    branches:
+      - main
+      - master
 
 jobs:
   health-check:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
       - name: Check API health
         id: health-check
         uses: jtalk/url-health-check-action@v3
