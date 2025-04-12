@@ -127,6 +127,39 @@ Checks if the API is running.
 }
 ```
 
+## Health Check Monitoring
+
+This API includes an automated health check system to monitor the service availability:
+
+### GitHub Actions Workflow
+
+A GitHub Actions workflow runs every 5 minutes to check the health of the API at https://shopstr-gl.vercel.app/api/health. The workflow:
+
+- Makes HTTP requests to verify the API is responding
+- Retries up to 3 times if a request fails
+- Sends Slack notifications on failures
+- Records check results in GitHub workflow logs
+
+To view the health check status:
+1. Go to the GitHub repository's "Actions" tab
+2. Select the "API Health Check" workflow
+3. Review the latest workflow runs
+
+### Setting Up Notifications
+
+The workflow is configured to send Slack notifications when the health check fails. To set up notifications:
+
+1. Create a Slack webhook URL for your workspace
+2. Add the webhook URL as a GitHub repository secret named `SLACK_WEBHOOK`
+3. Customize the notification channel in the workflow file if needed
+
+### Manual Health Check
+
+You can also trigger a manual health check:
+1. Go to the GitHub repository's "Actions" tab
+2. Select the "API Health Check" workflow
+3. Click "Run workflow"
+
 ## Integration with Frontend
 
 To integrate with a frontend application, set your frontend environment variable:
@@ -137,4 +170,4 @@ NEXT_PUBLIC_USERNAME_API_URL=http://localhost:8080
 
 ## License
 
-MIT 
+MIT

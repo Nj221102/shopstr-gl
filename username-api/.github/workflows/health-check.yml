@@ -1,0 +1,39 @@
+name: API Health Check
+
+on:
+  schedule:
+    # Run every 5 minutes
+    - cron: '*/5 * * * *'
+  # Also allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check API health
+        id: health-check
+        uses: jtalk/url-health-check-action@v3
+        with:
+          url: https://shopstr-gl.vercel.app/api/health
+          max-attempts: 3
+          retry-delay: 5s
+          follow-redirect: true
+          # The health check should return a 2xx status code
+          accept: 200,201,202,203,204,205,206
+          
+      - name: Notify on failure
+        if: ${{ failure() }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: alerts
+          SLACK_COLOR: danger
+          SLACK_TITLE: API Health Check Failed
+          SLACK_MESSAGE: 'The health check for username-api has failed. Please check the service at https://shopstr-gl.vercel.app/api/health'
+          SLACK_FOOTER: "Powered by GitHub Actions"
+          
+      - name: Record status
+        run: |
+          echo "Health check at $(date -u) - Status: ${{ steps.health-check.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "URL checked: https://shopstr-gl.vercel.app/api/health" >> $GITHUB_STEP_SUMMARY
